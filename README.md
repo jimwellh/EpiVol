@@ -2,9 +2,7 @@
 
 **Contagious Semantics: A Mass-Conserving SIRS State-Space Filter for News-Driven Volatility**
 
-*Do epidemic state-space filters improve news-driven volatility forecasts?*
-
-Final project for ESE 5380 — Machine Learning for Time Series (University of Pennsylvania). Deliverables: a NeurIPS-style paper and a five-minute video.
+_Do epidemic state-space filters improve news-driven volatility forecasts?_
 
 > **Status:** Work in progress. No results have been reported yet.
 
@@ -18,11 +16,11 @@ When converting irregular financial news embeddings into daily features, does a 
 
 Daily realized volatility lives on a regular trading-day grid, while news arrives as sparse, irregular events with multi-day silent periods ("information blackouts"). Any forecasting pipeline must choose a causal filter that turns the history of sparse text shocks into a daily latent state. Common choices each embed a strong assumption:
 
-| Filter | Implicit assumption | Failure mode |
-|---|---|---|
-| Impulse / zero-fill | Market digests news instantly | Ignores multi-day underreaction and drift |
-| Forward-fill (LOCF) | Old news stays fully fresh | Injects stale signal during long blackouts |
-| Exponential decay (EWMA) | Peak impact at arrival, then geometric decay | Cannot represent delayed peaks |
+| Filter                   | Implicit assumption                          | Failure mode                               |
+| ------------------------ | -------------------------------------------- | ------------------------------------------ |
+| Impulse / zero-fill      | Market digests news instantly                | Ignores multi-day underreaction and drift  |
+| Forward-fill (LOCF)      | Old news stays fully fresh                   | Injects stale signal during long blackouts |
+| Exponential decay (EWMA) | Peak impact at arrival, then geometric decay | Cannot represent delayed peaks             |
 
 Information diffusion research (Hong & Stein, 1999; Shive, 2010; Meursault et al., 2023) suggests news is digested gradually through investor contagion. A discrete-time **SIRS** filter yields a **hump-shaped memory kernel**: the state can amplify on silent days while the susceptible pool is large (`S_{t-1} > γ/β`), peak with a delay, and then decay — while remaining mass-conserving (`S + I + R = 1`) and bounded.
 
@@ -34,16 +32,16 @@ All text filters receive the same daily input `m̃_t · u_t ∈ R^19` and output
 ŷ_{t+h} = μ_i + θ₁ v_t^(d) + θ₂ v_t^(w) + θ₃ v_t^(m) + w_hᵀ z_t,    h ∈ {1, 2, 3, 5, 10}
 ```
 
-| Model | Description |
-|---|---|
-| Baseline 0 | Text-free HAR-RV |
-| Baseline 1 | Impulse / zero-fill |
-| Baseline 2 | Causal forward-fill (LOCF) |
-| Baseline 3 | Monotonic exponential decay, causal AR(1) |
+| Model          | Description                                                                     |
+| -------------- | ------------------------------------------------------------------------------- |
+| Baseline 0     | Text-free HAR-RV                                                                |
+| Baseline 1     | Impulse / zero-fill                                                             |
+| Baseline 2     | Causal forward-fill (LOCF)                                                      |
+| Baseline 3     | Monotonic exponential decay, causal AR(1)                                       |
 | **Proposed 1** | Mass-conserving causal SIRS state-space filter (split contagion / spark update) |
-| **Proposed 2** | Second-order causal Gamma filter (linear hump-shaped fallback) |
-| **Proposed 3** | Context-dependent learnable SIRS filter (PyTorch, BPTT) |
-| Ablation | `R^19` vs. `R^20` state (appending susceptible capacity `S_t`) |
+| **Proposed 2** | Second-order causal Gamma filter (linear hump-shaped fallback)                  |
+| **Proposed 3** | Context-dependent learnable SIRS filter (PyTorch, BPTT)                         |
+| Ablation       | `R^19` vs. `R^20` state (appending susceptible capacity `S_t`)                  |
 
 ## Data
 
@@ -53,11 +51,11 @@ All text filters receive the same daily input `m̃_t · u_t ∈ R^19` and output
 - **Target:** log Parkinson (1980) range-based realized volatility.
 - **Alignment:** 16:00:00 America/New_York forecast origin; after-hours, weekend, and holiday news routes to the next NYSE trading day.
 
-| Split | Period | Use |
-|---|---|---|
-| Train | 2016-01-01 – 2020-12-31 | Fit scalers, PCA, coverage tiers, Ridge weights |
-| Validation | 2021-01-01 – 2022-12-31 | Hyperparameter selection |
-| Test | 2023-01-01 – 2023-12-31 | Held out until final evaluation |
+| Split      | Period                  | Use                                             |
+| ---------- | ----------------------- | ----------------------------------------------- |
+| Train      | 2016-01-01 – 2020-12-31 | Fit scalers, PCA, coverage tiers, Ridge weights |
+| Validation | 2021-01-01 – 2022-12-31 | Hyperparameter selection                        |
+| Test       | 2023-01-01 – 2023-12-31 | Held out until final evaluation                 |
 
 ## Repository Structure
 
