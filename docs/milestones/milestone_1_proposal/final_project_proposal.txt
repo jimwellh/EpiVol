@@ -1,0 +1,51 @@
+Title
+Do Epidemic State-Space Filters Improve News-Driven Volatility Forecasts?
+
+
+
+Topic
+Own topic (combining Themes 12 and 13 on missingness and elapsed time).
+
+
+
+Question
+When converting irregular financial news embeddings into daily features, does a causal state-space filter with SIR epidemic dynamics reduce 1-to-10-day realized volatility forecast errors compared to zero-filling, forward-filling, or monotonic exponential decay?
+
+
+
+Why it matters
+Quantitative analysts and risk managers integrate unstructured news into daily volatility models, yet material disclosures arrive irregularly with multi-day silent gaps. Standard pipelines assume text impacts vanish immediately (zero-filling), remain constant (forward-filling), or decay monotonically from arrival, ignoring hump-shaped social contagion and delayed digestion across investors (Meursault et al., 2023). Identifying when non-monotonic epidemic filtering outperforms simple decay helps practitioners design leak-free event-driven risk forecasters.
+
+
+
+Data
+Public link: https://github.com/Zdong104/FNSPID_Financial_News_Dataset (FNSPID; Dong et al., 2024). The temporal unit is daily (US trading days, January 2016 to December 2023; 2,012 trading days per stock). After loading and inspecting the dataset, I verified that records contain exact UTC timestamps alongside daily open-high-low-close prices. To avoid selection bias and span different sparsity regimes, I stratified eligible S&P 500 stocks into tertiles (high, medium, and sparse coverage) using only 2016-2020 training-period news frequency and randomly sampled 50 stocks (~100,600 stock-day observations). Inspection reveals 3-to-15-day news blackouts in medium/sparse tiers versus dense clustering around earnings.
+
+
+
+Baseline
+Keeping the downstream learner fixed as a panel Ridge regression, the numerical baseline is a Heterogeneous Autoregressive (HAR-RV) model using 1-, 5-, and 22-day lagged log Parkinson realized volatility. For text baselines, frozen ProsusAI/finbert extracts 3-dimensional sentiment probabilities and 16 training-fitted PCA semantic components ($d=19$ shock vector $u_t$; $u_t = 0$ on silent days). We compare three traditional causal methods: (1) Impulse/zero-filling ($z_t = u_t$), (2) Forward-filling ($z_t = z_{t-1}$ when $u_t = 0$), and (3) Monotonic exponential decay ($z_t = \lambda z_{t-1} + u_t$, $\lambda \in (0,1)$). Ridge regularization $\alpha$ and decay $\lambda$ are tuned via chronological validation grid search.
+
+
+
+Comparison
+We compare the baselines against a mass-conserving causal state-space filter with discrete-time SIRS epidemic dynamics ($S_t + I_t + R_t = 1$, $\Delta S_t + \Delta I_t + \Delta R_t = 0$). Mapping news intensity $m_t = (P_{pos,t} + P_{neg,t})\log(1 + N_t)$ to bounded shock $\tilde{m}_t = 1 - \exp(-m_t)$, compartments update causally via $S_t = S_{t-1} - (\beta I_{t-1} + \alpha_0 \tilde{m}_t)S_{t-1} + (\delta + \eta \tilde{m}_t)R_{t-1}$, $I_t = (1-\gamma)I_{t-1} + (\beta I_{t-1} + \alpha_0 \tilde{m}_t)S_{t-1}$, and $R_t = 1 - S_t - I_t$, feeding $z_t = I_t \tilde{u}_t$ into the identical Ridge predictor. We evaluate validation grid-searched global $(\beta, \gamma)$ and an SGD extension learning context-dependent $(\beta(u_t), \gamma(u_t))$.
+
+
+
+Evaluation
+The target is h-step-ahead log Parkinson realized volatility $\log(\text{RV}_{i,t+h})$. The forecast origin is 16:00 EST market close on day $t$, evaluated via direct multi-step forecasting across horizons $h \in \{1, 2, 3, 5, 10\}$ trading days. Chronological splits are 2016-2020 (training, 1,258 days), 2021-2022 (validation, 504 days), and untouched 2023 (test, 252 days). Primary metrics are test RMSE and MAE, with uncertainty quantified via moving block bootstrap 95% confidence intervals across rolling origins and coverage tiers. Temporal leakage prevention: (1) UTC timestamps are converted to EST, routing any news released after 16:00 EST or on weekends to day $t+1$; (2) StandardScaler and 16-component PCA are fit strictly on 2016-2020 training data; (3) FinBERT weights (released 2020) precede the 2021-2023 evaluation periods, and all filters remain strictly causal.
+
+
+
+Key figure
+A multi-line plot with forecast horizon $h \in \{1, 2, 3, 5, 10\}$ days on the x-axis and percentage test RMSE change ($\Delta\text{RMSE}\%$) relative to the text-free HAR-RV baseline on the y-axis, comparing Impulse, Forward-fill, Exponential Decay, and SIR State-Space Filter curves with 95% block-bootstrap error bars.
+
+
+
+Risks and fallback
+Routine news may lack contagion dynamics, or SGD-learned parameters may overfit. As a fallback, I will rely on grid-searched global $(\beta, \gamma)$ and linear second-order Gamma kernels ($h(\tau) = \tau e^{-\gamma\tau}$), and disaggregate test errors by coverage tiers and earnings-announcement windows versus synthetic blackout masks.
+
+
+AI plan
+I will use Gemini and Antigravity for data-cleaning scripts, UTC-to-EST timestamp alignment, state-space filter debugging, and prose polishing. The main coding issue I plan to use AI to solve is switching between Colab Pro for more powerful computing but less IO throughput and my local computer with 5070ti and higher IO throughput. I will verify all outputs via unit tests on the 16:00 EST cutoff, analytical pulse-response checks on synthetic sequences, and manual inspection of every cited paper and figure.

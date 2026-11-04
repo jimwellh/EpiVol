@@ -1,0 +1,95 @@
+# ---------------------------------------------------------------
+# AI assistant context files (local only; derived from the Blueprint)
+# ---------------------------------------------------------------
+CLAUDE.md
+GEMINI.md
+AGENTS.md
+.claude/
+.gemini/
+
+# ---------------------------------------------------------------
+# Data (FNSPID raw dumps and derived panels are large / re-buildable)
+# metadata/ stays tracked: stratified ticker list must be reproducible.
+# ---------------------------------------------------------------
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+*.parquet
+*.duckdb
+*.duckdb.wal
+*.npy
+*.npz
+*.h5
+*.pkl
+*.joblib
+
+# Model weights / checkpoints / HF caches
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+checkpoints/
+.cache/
+hf_cache/
+
+# Experiment tracking & run outputs
+runs/
+outputs/
+logs/
+wandb/
+mlruns/
+lightning_logs/
+
+# ---------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+.conda/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Jupyter
+.ipynb_checkpoints/
+
+# ---------------------------------------------------------------
+# LaTeX build artifacts (keep .tex, .bib, figures)
+# ---------------------------------------------------------------
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+*.lof
+*.lot
+
+# ---------------------------------------------------------------
+# OS / Editor
+# ---------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
